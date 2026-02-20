@@ -4,13 +4,58 @@ Shared [OpenClaw](https://openclaw.ai) skills — reusable across workspaces via
 
 ## Installation
 
-Add as a git submodule into your OpenClaw workspace:
+### 1. Add as a git submodule
 
 ```bash
+cd /data/workspace
 git submodule add git@github.com:knedlopark/shared-claude-skills.git skills/shared
+git commit -m "Add shared-claude-skills submodule"
 ```
 
 OpenClaw recursively scans the `skills/` directory — skills in `skills/shared/` are picked up automatically.
+
+### 2. Deploy key (if needed)
+
+If your workspace doesn't have repo access via existing SSH keys, generate a dedicated deploy key:
+
+```bash
+ssh-keygen -t ed25519 -C "your-agent@openclaw-shared-skills" -f ~/.ssh/id_github_shared_skills -N ""
+```
+
+Add a host alias to `~/.ssh/config`:
+
+```
+Host github.com-shared-skills
+  HostName github.com
+  User git
+  IdentityFile ~/.ssh/id_github_shared_skills
+  IdentitiesOnly yes
+```
+
+Then use the alias when adding the submodule:
+
+```bash
+git submodule add git@github.com-shared-skills:knedlopark/shared-claude-skills.git skills/shared
+```
+
+Add the public key (`~/.ssh/id_github_shared_skills.pub`) as a deploy key on GitHub → repo Settings → Deploy keys. Enable write access if the agent should push changes.
+
+### 3. Keep skills updated
+
+Add a periodic pull to your `HEARTBEAT.md`:
+
+```markdown
+## Shared Skills - pull updates
+Run `cd /data/workspace/skills/shared && git pull --ff-only` once per day to pick up new shared skills.
+```
+
+### 4. Cloning a workspace that already has the submodule
+
+```bash
+git clone --recurse-submodules <workspace-repo-url>
+# or, if already cloned:
+git submodule update --init --recursive
+```
 
 ## Skills
 
