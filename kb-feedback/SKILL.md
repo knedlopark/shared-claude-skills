@@ -5,180 +5,156 @@ description: Multi-agent feedback loop for knowledge base maintenance. Use when 
 
 # KB Feedback Loop
 
-A structured workflow for extracting insights from sessions and applying them to the knowledge base with multi-agent quality review.
+Two modes for maintaining KB quality:
 
-## Overview
+1. **Continuous** — Agent logs insights to an inbox during normal work
+2. **Retrospective** — Batch review of accumulated insights via multi-agent colloquium
 
-1. **Extract** — Analyze conversation, identify insights
-2. **Review** — 4 parallel agents evaluate each insight (colloquium)
-3. **Consolidate** — Synthesize verdicts into a report
-4. **Apply** — Implement approved changes with user confirmation
+## Mode 1: Continuous Logging
 
-## Step 1: Extract Feedback
+During any session, when the agent encounters something noteworthy, append a line to `memory/feedback/inbox.md`:
 
-Scan the current session (or specified session via `sessions_history`). For each insight, assign a tag:
+```markdown
+- [{TAG}] {description} — source: {session/channel/context} @ {ISO timestamp}
+```
 
-| Tag | Meaning |
-|-----|---------|
-| `[BUG]` | Error caused by wrong KB info |
-| `[MISSING]` | Missing documentation |
-| `[UNCLEAR]` | Ambiguous or misleading info |
-| `[WRONG]` | Factually incorrect info |
-| `[EXAMPLE]` | Missing or bad example |
-| `[FLOW]` | Workflow problem |
-| `[OBSOLETE]` | Outdated information |
+**Do not interrupt the user.** Just append and continue working. The inbox is append-only during normal work.
 
-Present numbered list to user. User selects which to include ("all", numbers, or custom text).
+### Tags
 
-Save selected feedback to `memory/feedback/feedback-{YYYY-MM-DD-HHmmss}.md`:
+#### Knowledge
+| Tag | When to use |
+|-----|-------------|
+| `[LESSON]` | Learned something the hard way (trial & error cost time) |
+| `[WRONG]` | KB contains incorrect information |
+| `[MISSING]` | Needed info that doesn't exist in KB |
+| `[OBSOLETE]` | KB info is outdated |
+
+#### Process
+| Tag | When to use |
+|-----|-------------|
+| `[FLOW]` | Workflow is inefficient or broken |
+| `[SHORTCUT]` | Discovered a faster/better way |
+| `[PATTERN]` | Recurring task that should be templated |
+
+#### Communication
+| Tag | When to use |
+|-----|-------------|
+| `[UNCLEAR]` | Ambiguity that needs team clarification |
+| `[TERMINOLOGY]` | Inconsistent naming across KB |
+| `[CONTEXT]` | Learned about a user/team member's preferences or habits |
+
+#### Technical
+| Tag | When to use |
+|-----|-------------|
+| `[BUG]` | Error caused by wrong KB/docs |
+| `[TOOLING]` | Tool limitation or missing capability |
+| `[DEPENDENCY]` | Missing dependency or environment issue |
+
+### Inbox format
+
+Create `memory/feedback/inbox.md` if it doesn't exist:
+
+```markdown
+# Feedback Inbox
+Items logged continuously. Processed during retrospectives.
+
+## Pending
+- [LESSON] Raynet task API requires `owner` field — not documented — source: #ai-test @ 2026-02-20T14:30:00Z
+- [MISSING] No onboarding procedure for CRM setup — source: DM/martin @ 2026-02-20T15:00:00Z
+
+## Processed
+<!-- Items moved here after retrospective with reference to report -->
+```
+
+### When to log
+
+Log when you:
+- Hit an error caused by KB gaps
+- Discover something not in KB that should be
+- Notice inconsistency between KB and reality
+- Find a better way to do something
+- Learn user preferences not yet documented
+- Encounter terminology confusion
+
+### When NOT to log
+
+- Trivial or one-off issues
+- Things already in the inbox
+- Personal session artifacts (debug output, temp files)
+
+## Mode 2: Retrospective (Colloquium)
+
+Trigger: user says "feedback", "review inbox", "what did we learn", "retrospective", "process feedback"
+
+### Step 1: Prepare
+
+Read `memory/feedback/inbox.md`. If empty, scan recent sessions via `sessions_history` for insights.
+
+Group items by target KB file/topic. Present summary to user:
+
+```
+Found {N} items in inbox:
+- {count} Knowledge ({LESSON}, {WRONG}, {MISSING}, {OBSOLETE})
+- {count} Process ({FLOW}, {SHORTCUT}, {PATTERN})
+- {count} Communication ({UNCLEAR}, {TERMINOLOGY}, {CONTEXT})
+- {count} Technical ({BUG}, {TOOLING}, {DEPENDENCY})
+
+Process all, or select specific items/categories?
+```
+
+User selects scope. Save structured feedback to `memory/feedback/feedback-{timestamp}.md`:
 
 ```markdown
 # Feedback {timestamp}
-## Source: {session description}
 ## Items
 ### 1. [{TAG}] {title}
 - **File:** {path to affected KB file}
-- **Section:** {specific section/lines}
+- **Section:** {specific section/lines if known}
 - **Problem:** {description}
 - **Impact:** {who is affected, how often}
 - **Proposed fix:** {concrete change}
 ```
 
-## Step 2: Colloquium (Multi-Agent Review)
+### Step 2: Colloquium (Multi-Agent Review)
 
-Spawn 4 parallel sub-agents via `sessions_spawn`. Each receives the feedback file content and relevant KB file contents as context.
+Spawn 4 parallel sub-agents via `sessions_spawn`. Each receives the feedback file content and relevant KB file contents.
 
-### Agent prompts
+Read `references/agent-prompts.md` for the full prompt templates for each agent.
 
-Use these task descriptions for each agent. Replace `{FEEDBACK_CONTENT}` with the actual feedback file content, and `{KB_FILES}` with contents of affected KB files.
+The 4 agents:
 
-#### PRAGMA — Factual Accuracy
+| Agent | Dimension | Catches |
+|-------|-----------|---------|
+| **PRAGMA** | Factual accuracy | Wrong info, broken refs, contradictions |
+| **STRATOS** | KB architecture | Misplaced content, missing cross-refs, bloat |
+| **PRAXIS** | User impact | Low-value additions, wrong root cause |
+| **CUSTOS** | Quality standards | Duplicates, style violations, edge cases |
 
-```
-You are PRAGMA, a factual accuracy reviewer. Verify each feedback item:
-- Do referenced files/sections/functions actually exist?
-- Are proposed changes factually correct?
-- Are there duplicates with existing KB content?
-- Would the change introduce contradictions?
-
-For each item, output:
-## Item {N}: {title}
-- **Verified:** ✓/✗
-- **Evidence:** {file:line references or explanation}
-- **Issues:** {any problems found}
-- **Recommendation:** ACCEPT / REVISE / REJECT
-
-Context:
-{FEEDBACK_CONTENT}
-
-Relevant KB files:
-{KB_FILES}
-```
-
-#### STRATOS — KB Architecture
+Spawn all 4 in parallel (no dependencies between them):
 
 ```
-You are STRATOS, a knowledge base architect. For each feedback item, determine:
-- Where does this change belong? (which file, which section)
-- Should it extend existing content or create new?
-- Are there cross-reference opportunities?
-- Does it fit the existing structure and size guidelines?
-
-For each item, output:
-## Item {N}: {title}
-- **Location:** {recommended file and section}
-- **Action:** EXTEND / NEW_SECTION / NEW_FILE / CROSS_REF
-- **Structure notes:** {sizing, organization recommendations}
-- **Recommendation:** ACCEPT / REVISE / REJECT
-
-Context:
-{FEEDBACK_CONTENT}
-
-Relevant KB files:
-{KB_FILES}
-```
-
-#### PRAXIS — User Impact
-
-```
-You are PRAXIS, a user impact analyst. For each feedback item, assess:
-- Who benefits? (whole team, specific role, one person)
-- How often does this come up? (daily/weekly/monthly/once)
-- Is the root cause a docs problem or a tooling problem?
-- Is it clear enough for new team members?
-
-For each item, output:
-## Item {N}: {title}
-- **Audience:** {who benefits}
-- **Frequency:** {how often relevant}
-- **Root cause:** DOCS / TOOLING / PROCESS
-- **Recommendation:** ACCEPT / REVISE / REJECT
-
-Context:
-{FEEDBACK_CONTENT}
-
-Relevant KB files:
-{KB_FILES}
-```
-
-#### CUSTOS — Quality Gate
-
-```
-You are CUSTOS, a quality gatekeeper. Check each feedback item against:
-1. Useful to more than one person?
-2. Repeatable (not one-off)?
-3. Not a duplicate?
-4. Correct location?
-5. Concise (under ~30 lines)?
-6. Not deprecated/obsolete?
-7. Generic (not overly specific)?
-8. Consistent with surrounding style?
-
-For each item, output:
-## Item {N}: {title}
-- **Checklist:** {pass/fail per criterion}
-- **Score:** {N}/8
-- **Issues:** {any failures}
-- **Recommendation:** ACCEPT / REVISE / REJECT
-
-Context:
-{FEEDBACK_CONTENT}
-
-Relevant KB files:
-{KB_FILES}
-```
-
-### Spawning
-
-```
-sessions_spawn × 4 (parallel, no dependencies):
+sessions_spawn × 4:
   label: "feedback-pragma-{timestamp}"
-  task: {PRAGMA prompt with filled context}
-
   label: "feedback-stratos-{timestamp}"
-  task: {STRATOS prompt with filled context}
-
   label: "feedback-praxis-{timestamp}"
-  task: {PRAXIS prompt with filled context}
-
   label: "feedback-custos-{timestamp}"
-  task: {CUSTOS prompt with filled context}
 ```
 
-Wait for all 4 to complete (check via `sessions_list`).
+Wait for all 4 to complete (poll via `sessions_list`).
 
-## Step 3: Consolidate
+### Step 3: Consolidate
 
-Collect outputs from all 4 agents. Build a verdict for each item:
+Collect outputs. Build verdict per item:
 
 | Verdict | Condition |
 |---------|-----------|
-| ✅ **IMPLEMENT** | 4/4 or 3/4 ACCEPT (minor revisions ok) |
+| ✅ **IMPLEMENT** | 4/4 or 3/4 ACCEPT |
 | 🔄 **REVISE** | Majority ACCEPT but needs changes |
 | 🟠 **DISCUSS** | Agents disagree — user decides |
 | ❌ **REJECT** | Majority REJECT or critical issue |
 
-Generate consolidated report — save to `memory/feedback/report-{timestamp}.md` and present to user:
+Save report to `memory/feedback/report-{timestamp}.md` and present to user:
 
 ```markdown
 # Colloquium Report — {date}
@@ -188,64 +164,48 @@ Generate consolidated report — save to `memory/feedback/report-{timestamp}.md`
 | 1 | [{TAG}] desc | ✓ | ✓ | ✓ | ✓ | ✅ IMPLEMENT |
 
 ## Auto-approved (✅)
-{details}
-
 ## Needs revision (🔄)
-{details + what to change}
-
 ## Needs discussion (🟠)
-{conflicting views + options}
-
 ## Rejected (❌)
-{reasons}
 ```
 
-## Step 4: Apply Changes
+### Step 4: Apply
 
 For each approved item:
-1. Show the proposed diff (before/after)
+1. Show proposed diff (before/after)
 2. Wait for explicit user approval
-3. Apply the change
-4. Commit with message: `kb: {tag} {description} [feedback-{timestamp}]`
+3. Apply change
+4. Commit: `kb: [{TAG}] {description} [feedback-{timestamp}]`
 
-**Never auto-apply changes.** Even ✅ IMPLEMENT items require user confirmation.
+Move processed items from `## Pending` to `## Processed` in inbox.md with report reference.
 
-## Protected Files
-
-By default, these files require the feedback workflow for changes:
-- `MEMORY.md`
-- `SOUL.md`
-- `AGENTS.md`
-- `skills/` (skill definitions)
-
-Freely editable (operational data):
-- `memory/daily/`
-- `memory/business/`
-- `memory/feedback/`
-- `HEARTBEAT.md`
-- `TOOLS.md`
-
-Adjust these lists per project by noting overrides in AGENTS.md or MEMORY.md.
+**Never auto-apply.** Even ✅ items need user confirmation.
 
 ## Decision Tree
 
 ```
-Insight from session
+Insight during work
 │
-├── Is it about the KB / product / workflow?
-│   ├── NO → skip
-│   └── YES
-│       ├── Already documented?
-│       │   ├── YES → skip or CONSOLIDATE
-│       │   └── NO
-│       │       ├── Repeatable pattern?
-│       │       │   ├── NO → skip (edge case)
-│       │       │   └── YES → include in feedback
+├── Worth noting?
+│   ├── NO → continue
+│   └── YES → append to inbox.md
+│
+During retrospective:
+│
+├── Already in KB?
+│   ├── YES + correct → skip
+│   ├── YES + wrong → [WRONG]
+│   └── NO
+│       ├── Repeatable?
+│       │   ├── NO → skip (edge case)
+│       │   └── YES → include
 ```
 
-## Triggering
+## Configuration
 
-Activate this skill when:
-- User says "feedback", "co jsme se naučili", "review KB", "update knowledge base"
-- End of a productive session with new insights
-- User explicitly asks to review and improve documentation
+Projects can customize by adding to their AGENTS.md or MEMORY.md:
+
+- **Protected files** — which files require colloquium (default: main KB files, skills)
+- **Free files** — which files are freely editable (default: daily notes, operational data)
+- **Extra tags** — domain-specific categories (e.g. `[FEATURE]`, `[COMPETITOR]`)
+- **Retrospective schedule** — manual, weekly cron, or per-session
