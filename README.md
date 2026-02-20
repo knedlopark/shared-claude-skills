@@ -1,12 +1,15 @@
 # shared-claude-skills
 
-Sdílené OpenClaw skills pro tým tiketo Solutions.
+Shared OpenClaw skills.
 
 ## Skills
 
-- **raynet** — Raynet CRM API integrace (firmy, kontakty, obchodní případy, aktivity)
-- **tiketo-faq** — FAQ o tiketo walletPass produktu
+- **raynet** — Raynet CRM API integration (companies, contacts, deals, activities)
 
-## Použití
+## Usage
 
-Tyto skills se načítají z workspace `/data/workspace/skills/` v OpenClaw.
+Add as a git submodule to your OpenClaw workspace `skills/` directory:
+
+```bash
+git submodule add git@github.com:knedlopark/shared-claude-skills.git skills/shared
+```
