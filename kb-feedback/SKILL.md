@@ -1,14 +1,15 @@
 ---
 name: kb-feedback
-description: Multi-agent feedback loop for knowledge base maintenance. Use when a user says "feedback", "what did we learn", "review KB", "update knowledge base", or wants to review a session for insights and apply them to the KB with quality control. Provides a colloquium-style review with 4 specialized agents before any KB changes are made.
+description: Multi-agent feedback loop for knowledge base maintenance. Use when a user says "feedback", "what did we learn", "review KB", "update knowledge base", "extract feedback", or wants to review a session/thread for insights and apply them to the KB with quality control. Also activates on continuous insight logging during normal work. Provides a colloquium-style review with 4 specialized agents before any KB changes are made.
 ---
 
 # KB Feedback Loop
 
-Two modes for maintaining KB quality:
+Three modes for maintaining KB quality:
 
 1. **Continuous** — Agent logs insights to an inbox during normal work
-2. **Retrospective** — Batch review of accumulated insights via multi-agent colloquium
+2. **Session Feedback** — Interactive extraction of insights from current conversation
+3. **Retrospective** — Batch review of accumulated insights via multi-agent colloquium
 
 ## Mode 1: Continuous Logging
 
@@ -83,7 +84,49 @@ Log when you:
 - Things already in the inbox
 - Personal session artifacts (debug output, temp files)
 
-## Mode 2: Retrospective (Colloquium)
+## Mode 2: Session Feedback (Interactive)
+
+Trigger: user says "feedback", "co jsme se naučili", "extract feedback", "what did we learn here"
+
+### Step 1: Analyze conversation
+
+Read the current thread/session. If in a Slack thread, read the full thread via `message read` with `threadId`. If in a session, review recent conversation history.
+
+Identify every potential insight. Tag each one using the standard tags (see Continuous mode above).
+
+### Step 2: Present to user
+
+Show numbered list with tags:
+
+```
+Found {N} potential insights from this conversation:
+
+1. [LESSON] {description}
+2. [MISSING] {description}
+3. [TERMINOLOGY] {description}
+...
+
+Which ones to keep? (numbers, "all", or type your own)
+```
+
+### Step 3: User selects
+
+User responds with:
+- Numbers: `1, 3, 5` — keep only those
+- `all` — keep everything
+- Custom text — add as-is with appropriate tag
+
+### Step 4: Disposition
+
+Ask user:
+- **"inbox"** (default) — Append selected items to `memory/feedback/inbox.md` for later retrospective
+- **"review now"** — Save as feedback file and immediately run colloquium (Mode 3)
+
+If user doesn't specify, default to inbox.
+
+---
+
+## Mode 3: Retrospective (Colloquium)
 
 Trigger: user says "feedback", "review inbox", "what did we learn", "retrospective", "process feedback"
 
