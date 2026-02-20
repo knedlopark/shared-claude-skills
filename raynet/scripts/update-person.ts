@@ -119,7 +119,7 @@ async function main() {
   await client.updatePerson(id, data);
 
   console.log(`✓ Kontakt ${id} aktualizován`);
-  console.log(`  URL: https://app.raynet.cz/gimmedata/?view=DetailView&en=Person&ei=${id}`);
+  console.log(`  URL: https://app.raynet.cz/${client.instanceName}/?view=DetailView&en=Person&ei=${id}`);
 }
 
 main().catch((err) => {

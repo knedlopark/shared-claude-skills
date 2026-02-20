@@ -22,7 +22,7 @@ Referenční mapování pro vytváření obchodních případů (OP) v Raynet CR
 | Cloud (třetí strana) | 226 |
 | Účetní firma | 227 |
 
-## Custom Fields pro PI (Rekap)
+## Custom Fields pro PI
 
 | Název | Kód | Typ | Popis |
 |-------|-----|-----|-------|
@@ -34,7 +34,7 @@ Referenční mapování pro vytváření obchodních případů (OP) v Raynet CR
 | Kategorie produktů | KATEGORIE__29327 | string | Nastavení kategorií |
 | Cash flow | CASH_Flow_690b4 | boolean | Používá cash flow |
 | Sklad | Sklad_fcb4c | boolean | Používá sklad |
-| Produkt (REKAP/PRO) | PRODUKT_re_d7908 | string | Typ produktu |
+| Produkt | PRODUKT_re_d7908 | string | Typ produktu |
 | Tržby mimo fakturaci | Obrat_i_mi_f2f2f | boolean | Používá tržby mimo fakturaci |
 | Billing email | BILLING_EM_01c32 | string | Email pro fakturaci |
 
@@ -58,7 +58,7 @@ npx tsx create-business-case.ts \
   --custom-field="businessCaseClassification2=226" \
   --custom-field="Hospodarsk_e75c6=2026-01-01" \
   --custom-field="Strediska_05e55=true" \
-  --custom-field="PRODUKT_re_d7908=REKAP"
+  --custom-field="PRODUKT_re_d7908=BASIC"
 ```
 
 ## Poznámky

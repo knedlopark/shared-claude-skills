@@ -3,9 +3,9 @@
  *
  * Usage:
  *   npx tsx ./skills/raynet/scripts/list-products.ts
- *   npx tsx ./skills/raynet/scripts/list-products.ts --fulltext="Rekap"
+ *   npx tsx ./skills/raynet/scripts/list-products.ts --fulltext="Software"
  *   npx tsx ./skills/raynet/scripts/list-products.ts --code=R03
- *   npx tsx ./skills/raynet/scripts/list-products.ts --product-line="Rekap"
+ *   npx tsx ./skills/raynet/scripts/list-products.ts --product-line="Software"
  *   npx tsx ./skills/raynet/scripts/list-products.ts --json
  */
 
@@ -26,9 +26,9 @@ Options:
 
 Příklady:
   npx tsx list-products.ts
-  npx tsx list-products.ts --fulltext="Rekap"
+  npx tsx list-products.ts --fulltext="Software"
   npx tsx list-products.ts --code=R03
-  npx tsx list-products.ts --product-line="Rekap" --json
+  npx tsx list-products.ts --product-line="Software" --json
 `;
 
 interface Product {

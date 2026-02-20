@@ -399,13 +399,13 @@ Výpis produktů z Raynetu s kódem, názvem, cenou a produktovou řadou.
 npx tsx ./skills/raynet/scripts/list-products.ts
 
 # Fulltextové vyhledávání
-npx tsx ./skills/raynet/scripts/list-products.ts --fulltext="Rekap"
+npx tsx ./skills/raynet/scripts/list-products.ts --fulltext="Software"
 
 # Filtr podle kódu
 npx tsx ./skills/raynet/scripts/list-products.ts --code=R03
 
 # Filtr podle produktové řady
-npx tsx ./skills/raynet/scripts/list-products.ts --product-line="Rekap"
+npx tsx ./skills/raynet/scripts/list-products.ts --product-line="Software"
 
 # JSON výstup
 npx tsx ./skills/raynet/scripts/list-products.ts --json
@@ -487,7 +487,7 @@ const project = await client.apiRequest("GET", "/project/123/");
 
 ### Autentizace
 - Basic Auth: `username:apiKey`
-- Header: `X-Instance-Name: tiketo`
+- Header: `X-Instance-Name: your-instance`
 - Base URL: `https://app.raynet.cz/api/v2/`
 
 ### Rate limits
@@ -550,15 +550,15 @@ GET /company/?rowInfo.createdAt[GT]=2024-01-01 00:00&sortColumn=rowInfo.createdA
 
 Nastavit v OpenClaw config (`env` sekce):
 
-- `RAYNET_INSTANCE` — název instance (např. `tiketo`)
+- `RAYNET_INSTANCE` — název instance (např. `your-instance`)
 - `RAYNET_API_USER` — email uživatele
 - `RAYNET_API_TOKEN` — API klíč
 
-### Alternativa: Soubor `~/.gimmedata/raynet.json`
+### Alternativa: Soubor `~/.raynet/credentials.json`
 
 ```json
 {
-  "instanceName": "tiketo",
+  "instanceName": "your-instance",
   "username": "user@example.com",
   "apiKey": "your-api-key"
 }
@@ -570,8 +570,8 @@ Pro více instancí:
 {
   "instances": [
     {
-      "name": "tiketo",
-      "instanceName": "tiketo",
+      "name": "main",
+      "instanceName": "your-instance",
       "username": "user@example.com",
       "apiKey": "api-key-1",
       "default": true
@@ -594,12 +594,12 @@ Pro vytvoření odkazů na detail záznamů v Raynet web UI:
 
 | Entita | URL formát |
 |--------|------------|
-| Obchodní případ | `https://app.raynet.cz/tiketo/?view=DetailView&en=BusinessCase&ei={ID}` |
-| Firma | `https://app.raynet.cz/tiketo/?view=DetailView&en=Company&ei={ID}` |
-| Kontakt | `https://app.raynet.cz/tiketo/?view=DetailView&en=Person&ei={ID}` |
-| Lead | `https://app.raynet.cz/tiketo/?view=DetailView&en=Lead&ei={ID}` |
+| Obchodní případ | `https://app.raynet.cz/{INSTANCE_NAME}/?view=DetailView&en=BusinessCase&ei={ID}` |
+| Firma | `https://app.raynet.cz/{INSTANCE_NAME}/?view=DetailView&en=Company&ei={ID}` |
+| Kontakt | `https://app.raynet.cz/{INSTANCE_NAME}/?view=DetailView&en=Person&ei={ID}` |
+| Lead | `https://app.raynet.cz/{INSTANCE_NAME}/?view=DetailView&en=Lead&ei={ID}` |
 
-Příklad: `https://app.raynet.cz/tiketo/?view=DetailView&en=BusinessCase&ei=12345`
+Příklad: `https://app.raynet.cz/{INSTANCE_NAME}/?view=DetailView&en=BusinessCase&ei=12345`
 
 ## Known Limitations
 

@@ -136,7 +136,7 @@ async function main() {
   const result = await client.createBusinessCase(bcData);
 
   console.log(`✓ Obchodní případ vytvořen s ID: ${result.id}`);
-  console.log(`  URL: https://app.raynet.cz/gimmedata/?view=DetailView&en=BusinessCase&ei=${result.id}`);
+  console.log(`  URL: https://app.raynet.cz/${client.instanceName}/?view=DetailView&en=BusinessCase&ei=${result.id}`);
 }
 
 main().catch((err) => {

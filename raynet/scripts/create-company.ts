@@ -160,7 +160,7 @@ async function main() {
   const result = await client.createCompany(companyData);
 
   console.log(`✓ Firma vytvořena s ID: ${result.id}`);
-  console.log(`  URL: https://app.raynet.cz/gimmedata/?view=DetailView&en=Company&ei=${result.id}`);
+  console.log(`  URL: https://app.raynet.cz/${client.instanceName}/?view=DetailView&en=Company&ei=${result.id}`);
 }
 
 main().catch((err) => {

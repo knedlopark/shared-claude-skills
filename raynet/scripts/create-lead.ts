@@ -108,7 +108,7 @@ async function main() {
   const result = await client.createLead(leadData);
 
   console.log(`✓ Lead vytvořen s ID: ${result.id}`);
-  console.log(`  URL: https://app.raynet.cz/gimmedata/?view=DetailView&en=Lead&ei=${result.id}`);
+  console.log(`  URL: https://app.raynet.cz/${client.instanceName}/?view=DetailView&en=Lead&ei=${result.id}`);
 }
 
 main().catch((err) => {

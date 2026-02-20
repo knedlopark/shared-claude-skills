@@ -137,7 +137,7 @@ async function main() {
   await client.updateCompany(id, data);
 
   console.log(`✓ Firma ${id} aktualizována`);
-  console.log(`  URL: https://app.raynet.cz/gimmedata/?view=DetailView&en=Company&ei=${id}`);
+  console.log(`  URL: https://app.raynet.cz/${client.instanceName}/?view=DetailView&en=Company&ei=${id}`);
 }
 
 main().catch((err) => {

@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import os from "os";
 
-const CREDENTIALS_PATH = path.join(os.homedir(), ".gimmedata", "raynet.json");
+const CREDENTIALS_PATH = path.join(os.homedir(), ".raynet", "credentials.json");
 const BASE_URL = "https://app.raynet.cz/api/v2";
 
 // === DATE HELPERS ===
@@ -570,6 +570,10 @@ export interface RaynetClientOptions {
 export class RaynetClient {
   private credentials: RaynetCredentials;
   private authHeader: string;
+
+  get instanceName(): string {
+    return this.credentials.instanceName;
+  }
 
   constructor(options?: RaynetClientOptions | RaynetCredentials) {
     // Zpětná kompatibilita - pokud je předán přímo RaynetCredentials

@@ -160,10 +160,10 @@ function formatAmount(amount?: number, currency?: { value: string }): string {
   return `${amount.toLocaleString("cs-CZ")} ${curr}`;
 }
 
-function formatBusinessCase(bc: BusinessCase): void {
+function formatBusinessCase(bc: BusinessCase, instanceName: string): void {
   const phase = bc.businessCasePhase ? `[${bc.businessCasePhase.value}]` : "";
   const amount = formatAmount(bc.totalAmount, bc.currency);
-  const url = `https://app.raynet.cz/gimmedata/?view=DetailView&en=BusinessCase&ei=${bc.id}`;
+  const url = `https://app.raynet.cz/${instanceName}/?view=DetailView&en=BusinessCase&ei=${bc.id}`;
 
   console.log(`[${bc.id}] ${bc.name} ${phase}`.trim());
   if (bc.code) console.log(`    Kód: ${bc.code}`);
@@ -258,7 +258,7 @@ async function main() {
   }
 
   for (const bc of result.data) {
-    formatBusinessCase(bc);
+    formatBusinessCase(bc, client.instanceName);
   }
 }
 
