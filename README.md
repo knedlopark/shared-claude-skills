@@ -2,6 +2,18 @@
 
 Shared [OpenClaw](https://openclaw.ai) skills — reusable across workspaces via git submodule.
 
+## ⚠️ Contributing — Pull Requests Only
+
+**Do not push directly to `main`.** All changes must go through a pull request:
+
+1. Create a feature branch: `git checkout -b feat/your-change`
+2. Commit your changes
+3. Push the branch: `git push origin feat/your-change`
+4. Create a pull request via GitHub API or web UI
+5. Wait for review and approval before merging
+
+This applies to both humans and AI agents. Direct pushes to `main` will be rejected.
+
 ## Installation
 
 ### 1. Add as a git submodule
