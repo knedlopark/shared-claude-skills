@@ -17,6 +17,8 @@
  *   --status=NAME         Change status (uses transition)
  *   --assignee=VALUE      Assign to user (email, "me"/"mne" for self, or "none")
  *   --link=TYPE:KEY       Link to another issue (e.g. "blocks:ABC-456")
+ *   --web-link=URL|TITLE  Add a web link (e.g. "https://example.com|Preview")
+ *   --remove-web-link=ID  Remove a web link by ID
  *   --due=YYYY-MM-DD      Due date
  *   --fix-version=NAME    Set fixVersion (replaces existing)
  *   --add-fix-version=NAME  Add fixVersion (keeps existing)
@@ -214,6 +216,27 @@ async function main() {
         .map(v => ({ name: v.name }));
       await client.updateIssue(issueKey, { fixVersions: newVersions });
       console.log(`Done: Removed fixVersion: ${options["remove-fix-version"]}`);
+      updated = true;
+    }
+
+    // Add web link
+    if (options["web-link"]) {
+      const parts = options["web-link"].split("|");
+      const url = parts[0];
+      const title = parts[1] || url;
+      if (!url) {
+        console.error('Error: Web link format must be "URL|TITLE" (e.g. "https://example.com|Preview")');
+        process.exit(1);
+      }
+      const result = await client.addRemoteLink(issueKey, url, title);
+      console.log(`Done: Web link added (id: ${result.id}): ${title} → ${url}`);
+      updated = true;
+    }
+
+    // Remove web link
+    if (options["remove-web-link"]) {
+      await client.deleteRemoteLink(issueKey, options["remove-web-link"]);
+      console.log(`Done: Web link removed (id: ${options["remove-web-link"]})`);
       updated = true;
     }
 

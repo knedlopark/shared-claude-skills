@@ -178,6 +178,28 @@ Remove link between issues.
 npx tsx .claude/skills/jira/scripts/unlink-issue.ts <ISSUE-KEY> <TARGET-KEY>
 ```
 
+#### Web Links (Remote Links)
+Add, view, or remove external web links on issues (e.g. preview URLs, PR links).
+
+```bash
+# Add a web link
+npx tsx .claude/skills/jira/scripts/update-issue.ts ABC-123 --web-link="https://preview.example.com|Preview Environment"
+
+# View web links (shown automatically with get-issue)
+npx tsx .claude/skills/jira/scripts/get-issue.ts ABC-123
+
+# Remove a web link by ID (shown in get-issue output)
+npx tsx .claude/skills/jira/scripts/update-issue.ts ABC-123 --remove-web-link=12345
+```
+
+**Programmatic usage via JiraClient:**
+```typescript
+const client = JiraClient.forIssue("ABC-123");
+await client.addRemoteLink("ABC-123", "https://example.com", "Preview", "Optional summary");
+const links = await client.getRemoteLinks("ABC-123");
+await client.deleteRemoteLink("ABC-123", "12345");
+```
+
 ### Board Management
 
 #### move-to-board.ts

@@ -37,6 +37,20 @@ async function main() {
       console.log(JSON.stringify(issue, null, 2));
     } else {
       console.log(formatIssue(issue, includeComments, includeAttachments));
+
+      // Show web links (remote links)
+      try {
+        const remoteLinks = await client.getRemoteLinks(issueKey!);
+        if (remoteLinks.length > 0) {
+          console.log(`\n--- Web Links ---`);
+          for (const link of remoteLinks) {
+            console.log(`  [${link.id}] ${link.object.title}: ${link.object.url}`);
+          }
+        }
+      } catch {
+        // Remote links may not be available, skip silently
+      }
+
       console.log(`\nURL: ${getBrowseUrl(issue.key)}`);
     }
   } catch (error) {

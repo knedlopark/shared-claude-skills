@@ -178,6 +178,16 @@ export interface JiraIssueLink {
   outwardIssue?: { key: string; fields: { summary: string; status: { name: string } } };
 }
 
+export interface JiraRemoteLink {
+  id: number;
+  self: string;
+  object: {
+    url: string;
+    title: string;
+    summary?: string;
+  };
+}
+
 export interface JiraTransition {
   id: string;
   name: string;
@@ -409,6 +419,34 @@ export class JiraClient {
       const error = await response.text();
       throw new Error(`Delete attachment failed (${response.status}): ${error}`);
     }
+  }
+
+  // === REMOTE LINKS (Web Links) ===
+  async getRemoteLinks(issueKey: string): Promise<JiraRemoteLink[]> {
+    return this.request<JiraRemoteLink[]>("GET", `/issue/${issueKey}/remotelink`);
+  }
+
+  async addRemoteLink(
+    issueKey: string,
+    url: string,
+    title: string,
+    summary?: string
+  ): Promise<{ id: number; self: string }> {
+    return this.request<{ id: number; self: string }>(
+      "POST",
+      `/issue/${issueKey}/remotelink`,
+      {
+        object: {
+          url,
+          title,
+          ...(summary ? { summary } : {}),
+        },
+      }
+    );
+  }
+
+  async deleteRemoteLink(issueKey: string, remoteLinkId: string): Promise<void> {
+    await this.request<void>("DELETE", `/issue/${issueKey}/remotelink/${remoteLinkId}`);
   }
 
   // === ISSUE LINKS ===
