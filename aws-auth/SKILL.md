@@ -1,6 +1,6 @@
 # AWS Authorization Skill
 
-How Smith authenticates with AWS for deployments and resource management.
+How to authenticate with AWS for deployments and resource management.
 
 ## Authentication Methods
 
@@ -9,16 +9,16 @@ How Smith authenticates with AWS for deployments and resource management.
 **Setup (one-time):**
 Configure SSO profile in `~/.aws/config`:
 ```ini
-[profile stepforge]
+[profile YOUR_PROFILE]
 sso_start_url = https://YOUR_ORG.awsapps.com/start
-sso_region = eu-central-1
+sso_region = YOUR_REGION
 sso_account_id = YOUR_ACCOUNT_ID
 sso_role_name = AdministratorAccess
-region = eu-central-1
+region = YOUR_REGION
 ```
 
 **Login flow:**
-1. Run: `aws sso login --profile stepforge --no-browser --use-device-code`
+1. Run: `aws sso login --profile YOUR_PROFILE --no-browser --use-device-code`
 2. Send device code + verification URL to user:
    ```
    Open this URL and enter the code:
@@ -26,7 +26,7 @@ region = eu-central-1
    Code: XXXX-XXXX
    ```
 3. Wait for user to confirm
-4. Verify: `aws sts get-caller-identity --profile stepforge`
+4. Verify: `aws sts get-caller-identity --profile YOUR_PROFILE`
 
 **Important:**
 - Always use `--no-browser --use-device-code` — agent has no browser
@@ -38,14 +38,14 @@ region = eu-central-1
 **Setup (one-time):**
 Configure credentials in `~/.aws/credentials`:
 ```ini
-[profile stepforge]
+[profile YOUR_PROFILE]
 aws_access_key_id = AKIA...
 aws_secret_access_key = ...
 ```
 And region in `~/.aws/config`:
 ```ini
-[profile stepforge]
-region = eu-central-1
+[profile YOUR_PROFILE]
+region = YOUR_REGION
 ```
 
 **Usage:** No login needed — credentials are always available.
@@ -53,7 +53,7 @@ region = eu-central-1
 ### C) CI/CD Pipeline (for pipeline mode)
 
 AWS credentials stored in CI secrets (GitHub Secrets, GitLab CI Variables).
-Authentication handled by the pipeline, not by Smith.
+Authentication handled by the pipeline, not by the agent.
 Options:
 - OIDC federation (recommended — no long-lived credentials)
 - IAM role with access key
@@ -62,16 +62,16 @@ Options:
 
 ```bash
 # Set profile for all SST commands
-export AWS_PROFILE=stepforge
+export AWS_PROFILE=YOUR_PROFILE
 
 # Deploy
 sst deploy --stage dev
-sst deploy --stage dev --target MyWorkflow
+sst deploy --stage dev --target MyResource
 
 # Dev mode (hot reload)
 sst dev
 
-# Secrets (user sets, Smith references)
+# Secrets
 sst secret set MyApiKey <value> --stage dev
 ```
 
