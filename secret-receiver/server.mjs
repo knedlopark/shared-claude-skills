@@ -1,5 +1,5 @@
 import http from 'node:http';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { parseArgs } from 'node:util';
 
 const { values: args } = parseArgs({
@@ -116,9 +116,9 @@ const server = http.createServer((req, res) => {
 
       try {
         // -U updates if exists, creates if not
-        execSync(
-          `security add-generic-password -a "${ACCOUNT}" -s "${SERVICE}" -w "${secret.replace(/"/g, '\\"')}" -U`
-        );
+        execFileSync('security', [
+          'add-generic-password', '-a', ACCOUNT, '-s', SERVICE, '-w', secret, '-U',
+        ]);
         console.log('TOKEN_SAVED');
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         res.end(OK_HTML);
