@@ -25,13 +25,25 @@ region = YOUR_REGION
    URL: https://YOUR_ORG.awsapps.com/start/#/device
    Code: XXXX-XXXX
    ```
-3. Wait for user to confirm
+3. Wait for the login process itself to finish — see note below on how, and why you shouldn't need a separate chat confirmation from the user for this
 4. Verify: `aws sts get-caller-identity --profile YOUR_PROFILE`
 
 **Important:**
 - Always use `--no-browser --use-device-code` — agent has no browser
 - Sessions expire — re-login when commands fail with auth errors
 - Never store or display credentials in messages or files
+
+**Critical — how you wait matters:**
+
+Step 1 blocks on the OAuth device-code poll until the user approves (or it times out — typically several minutes). If your agent runtime ends its turn / tears down its process between sending the code (step 2) and the user's approval, an ordinary backgrounded shell command is very likely to be killed with it — the code then silently expires unused, even though the user's approval was valid. This is easy to miss because each retry *looks* like a fresh, unrelated failure, when it's really the same lifecycle bug every time.
+
+Two ways to avoid it, depending on what your agent runtime offers:
+- **Keep the wait inside one live turn.** Run step 1 synchronously (or via a background job you actively poll without ending your turn) for the duration of the device-code TTL, so the process stays alive until the token exchange completes.
+- **Use a durable/detached background-task mechanism**, if your runtime has one, that survives your own process ending and can wake your agent back up on completion — as opposed to a plain "run in background" flag that's scoped to the current process/session.
+
+With the second option you don't need to ask the user to separately confirm in chat that they clicked approve — the device-code login process itself only exits once AWS has registered the approval, so the task's own completion notification *is* the confirmation. Waiting on a redundant "confirmed" message from the user just adds a second, unnecessary synchronization point that can itself go stale (e.g. a user's confirmation crossing with a retry).
+
+Don't assume a repeated device-code failure is a fluke or a user-error ("they clicked too slowly") before ruling this out.
 
 ### B) IAM User (non-interactive — for always-on agents)
 
