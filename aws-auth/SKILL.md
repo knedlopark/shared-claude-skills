@@ -19,12 +19,26 @@ region = YOUR_REGION
 
 **Login flow:**
 1. Run: `aws sso login --profile YOUR_PROFILE --no-browser --use-device-code`
-2. Send device code + verification URL to user:
+2. Send the user a single clickable link with the code pre-filled — don't make them type it. The
+   CLI's own printed output only gives `verification_uri` and `user_code` as two separate pieces:
    ```
    Open this URL and enter the code:
    URL: https://YOUR_ORG.awsapps.com/start/#/device
    Code: XXXX-XXXX
    ```
+   but the underlying AWS SSO-OIDC API call the CLI makes under the hood
+   (`StartDeviceAuthorization`) actually returns a `verificationUriComplete` field too — verified
+   directly 2026-09-23 by calling `aws sso-oidc register-client` + `aws sso-oidc
+   start-device-authorization` against a real org and reading the JSON response. It follows this
+   exact pattern (query string appended after the `#` fragment, parsed client-side by the SSO
+   portal's router):
+   ```
+   https://YOUR_ORG.awsapps.com/start/#/device?user_code=XXXX-XXXX
+   ```
+   The plain `aws sso login` CLI wrapper just doesn't surface this field in its human-readable
+   output — it's not that the portal lacks support for it. Concatenate `verification_uri` +
+   `?user_code=` + the code yourself and send that one link. Only fall back to the split
+   URL+code form if you have reason to think the pre-filled version isn't working for the user.
 3. Wait for the login process itself to finish — see note below on how, and why you shouldn't need a separate chat confirmation from the user for this
 4. Verify: `aws sts get-caller-identity --profile YOUR_PROFILE`
 
