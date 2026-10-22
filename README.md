@@ -100,3 +100,32 @@ Full integration with [Raynet CRM](https://raynet.cz) REST API v2. Enables the A
 - Node.js runtime with `npx tsx` available
 
 **Tech:** 19 TypeScript scripts with a shared Raynet API client (`scripts/lib/raynet-client.ts`), HTTP Basic Auth, automatic error handling.
+
+### Email (`email/`)
+
+Multi-account IMAP/SMTP integration using `imapflow`, `mailparser` and `nodemailer`. Lets the agent read, search, manage and send emails — and process newsletter unsubscribe headers (RFC 8058 one-click + `mailto:` + HTTP).
+
+**What it does:**
+
+- **Inbox summary** — unread counts across all accounts, latest unread preview
+- **Search** — by from/to/subject/body/date with seen/unseen/flagged filters
+- **Read** — fetch a specific email by UID, parsed (text/HTML/attachments) or raw RFC 5322
+- **Folders & labels** — list folders, add/remove Gmail labels (`X-GM-LABELS`), set IMAP flags, move/archive/trash
+- **Send** — plain-text SMTP send (Gmail-style host derivation, port 465 TLS)
+- **Unsubscribe** — list newsletter senders with `List-Unsubscribe` headers, classify by method (`one-click` / `mailto` / `http`), aggregate stats
+
+**Use cases:**
+
+- "Show me unread emails across all accounts"
+- "Search for invoices from billing@example.com since March"
+- "Read UID 12345, mark as read, then archive it"
+- "List all newsletter senders I could unsubscribe from"
+- "Send an unsubscribe mailto for sender X"
+
+**Requirements:**
+
+- Credentials in `EMAIL_ACCOUNTS_JSON` env var (preferred) or `~/.claude/email-credentials.json`
+- Node.js runtime with `npx tsx` available
+- Per-skill dependencies: `cd skills/shared/email/scripts && npm install`
+
+**Tech:** 8 TypeScript scripts (`config.ts` for credential loading, 7 operations) using `imapflow` for IMAP, `mailparser` for RFC 5322 parsing, `nodemailer` for SMTP. UID-based addressing for stability across sessions.
