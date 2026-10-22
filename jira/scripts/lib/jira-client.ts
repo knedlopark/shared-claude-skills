@@ -747,8 +747,15 @@ function parseInlineMarkup(text: string): object[] {
       continue;
     }
 
+    // Emphasis markers only count at word boundaries: the opening marker must
+    // start the text or follow whitespace/punctuation, and the closing marker
+    // must be followed by end/whitespace/punctuation. This keeps identifiers
+    // such as first_purchase_price or a*b*c as plain text.
+    const prevChar = text[text.length - remaining.length - 1];
+    const atWordStart = prevChar === undefined || /[\s(\["'>]/.test(prevChar);
+
     // Bold: *text*
-    const boldMatch = remaining.match(/^\*([^*]+)\*/);
+    const boldMatch = atWordStart ? remaining.match(/^\*(\S(?:[^*]*?\S)?)\*(?=$|[\s.,;:!?)\]"'])/) : null;
     if (boldMatch) {
       result.push({
         type: "text",
@@ -760,7 +767,7 @@ function parseInlineMarkup(text: string): object[] {
     }
 
     // Italic: _text_
-    const italicMatch = remaining.match(/^_([^_]+)_/);
+    const italicMatch = atWordStart ? remaining.match(/^_(\S(?:[^_]*?\S)?)_(?=$|[\s.,;:!?)\]"'])/) : null;
     if (italicMatch) {
       result.push({
         type: "text",
@@ -771,15 +778,17 @@ function parseInlineMarkup(text: string): object[] {
       continue;
     }
 
-    // Plain URL (standalone)
-    const urlMatch = remaining.match(/^(https?:\/\/[^\s]+)/);
+    // Plain URL (standalone) — trailing sentence punctuation and unbalanced
+    // closing brackets are not part of the link.
+    const urlMatch = remaining.match(/^(https?:\/\/[^\s<>]+)/);
     if (urlMatch) {
+      const url = trimUrlTail(urlMatch[1]);
       result.push({
         type: "text",
-        text: urlMatch[1],
-        marks: [{ type: "link", attrs: { href: urlMatch[1] } }],
+        text: url,
+        marks: [{ type: "link", attrs: { href: url } }],
       });
-      remaining = remaining.substring(urlMatch[0].length);
+      remaining = remaining.substring(url.length);
       continue;
     }
 
@@ -791,7 +800,41 @@ function parseInlineMarkup(text: string): object[] {
     }
   }
 
-  return result;
+  return mergeAdjacentPlainText(result);
+}
+
+// Strip sentence punctuation and unbalanced closing brackets from the end of a
+// bare URL: "https://x/issues/18)." -> "https://x/issues/18", while
+// "https://en.wikipedia.org/wiki/Foo_(bar)" keeps its balanced parenthesis.
+function trimUrlTail(url: string): string {
+  for (;;) {
+    const last = url[url.length - 1];
+    if (/[.,;:!?'"]/.test(last)) {
+      url = url.slice(0, -1);
+      continue;
+    }
+    const count = (s: string, ch: string) => s.split(ch).length - 1;
+    if ((last === ")" && count(url, "(") < count(url, ")")) || (last === "]" && count(url, "[") < count(url, "]"))) {
+      url = url.slice(0, -1);
+      continue;
+    }
+    return url;
+  }
+}
+
+// Join consecutive unmarked text nodes so a word split on a literal `_`/`*`/`h`
+// comes back as one node (keeps ADF compact, no rendering change).
+function mergeAdjacentPlainText(nodes: object[]): object[] {
+  const out: Array<{ type: string; text?: string; marks?: unknown }> = [];
+  for (const node of nodes as Array<{ type: string; text?: string; marks?: unknown }>) {
+    const prev = out[out.length - 1];
+    if (prev && node.type === "text" && prev.type === "text" && !node.marks && !prev.marks) {
+      prev.text = (prev.text || "") + (node.text || "");
+    } else {
+      out.push({ ...node });
+    }
+  }
+  return out;
 }
 
 // Helper pro prevod ADF na plain text

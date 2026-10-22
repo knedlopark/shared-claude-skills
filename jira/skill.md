@@ -466,6 +466,10 @@ npx tsx .claude/skills/jira/scripts/add-comment.ts ABC-123 --adf='{
 | `https://...` | auto link |
 | `{{code}}` | `inline code` |
 
+**Word boundaries:** `*` and `_` only toggle formatting when the opening marker starts a word (text start, whitespace or `(`/`[`/quote before it) and the closing marker ends one (text end, whitespace or punctuation after it). Identifiers like `first_purchase_price` or `a*b*c` therefore stay plain — no escaping needed.
+
+**Bare URLs:** trailing sentence punctuation (`.`, `,`, `;`, `:`, `!`, `?`, quotes) and unbalanced closing `)` / `]` are left outside the link, so `(see https://example.com/issues/18).` links `https://example.com/issues/18` only. Balanced parentheses inside the URL (Wikipedia style) are kept.
+
 #### Headings
 | Syntax | Result |
 |--------|--------|
